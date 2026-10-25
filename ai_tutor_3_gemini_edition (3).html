@@ -1,0 +1,1734 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI Tutor 3 – गुरुजी (Powered by Gemini AI)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  :root {
+    --bg-main: #f8fafc;
+    --card-bg: #ffffff;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --accent: #4f46e5;
+    --border-col: #e2e8f0;
+  }
+  .dark {
+    --bg-main: #0b0f19;
+    --card-bg: #111827;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --accent: #6366f1;
+    --border-col: #1f2937;
+  }
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Devanagari", Roboto, sans-serif;
+  }
+  /* Mark & Underline styling requested */
+  .mark-highlight {
+    background: linear-gradient(120deg, rgba(254, 240, 138, 0.6) 0%, rgba(253, 224, 71, 0.7) 100%);
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .dark .mark-highlight {
+    background: linear-gradient(120deg, rgba(161, 98, 7, 0.4) 0%, rgba(202, 138, 4, 0.5) 100%);
+    color: #fef08a;
+  }
+  .curly-underline {
+    text-decoration: underline wavy #ef4444 2px;
+    text-underline-offset: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+  }
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #334155;
+  }
+  /* Animation */
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 10px rgba(99, 102, 241, 0.2); }
+    50% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.5); }
+  }
+  .pulse-border {
+    animation: pulseGlow 2s infinite ease-in-out;
+  }
+</style>
+</head>
+<body class="min-h-screen flex flex-col transition-colors duration-200">
+
+  <!-- Top Navigation Bar -->
+  <header class="sticky top-0 z-40 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 px-3 py-2 sm:px-6 flex flex-wrap items-center justify-between gap-2 shadow-sm">
+    <div class="flex items-center gap-3">
+      <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center text-white shadow-md text-xl font-black">
+        ग
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="font-extrabold text-lg sm:text-xl tracking-tight text-gray-900 dark:text-white flex items-center gap-1.5">
+            AI Tutor 3 <span class="text-xs bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 font-bold px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800">गुरुजी ✨ Gemini</span>
+          </span>
+        </div>
+        <p class="text-[11px] text-gray-500 dark:text-gray-400 font-medium">1000 Progressive Qs • 3-Year-Old Simplicity to Industry Pro</p>
+      </div>
+    </div>
+
+    <!-- Controls & Selectors -->
+    <div class="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+      <div class="relative">
+        <select id="courseSelect" class="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg py-1.5 pl-3 pr-8 font-semibold text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none appearance-none cursor-pointer max-w-[200px] sm:max-w-[280px] truncate"></select>
+        <i class="fa-solid fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-xs"></i>
+      </div>
+
+      <div class="relative">
+        <select id="chapterSelect" class="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg py-1.5 pl-3 pr-8 font-medium text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none appearance-none cursor-pointer max-w-[170px] sm:max-w-[240px] truncate"></select>
+        <i class="fa-solid fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-xs"></i>
+      </div>
+
+      <button id="langToggleBtn" class="px-2.5 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+        <i class="fa-solid fa-language text-indigo-500"></i>
+        <span id="langLabel">हिंदी / EN</span>
+      </button>
+
+      <button id="themeToggleBtn" class="p-2 rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300" title="Dark / Light Theme">
+        <i class="fa-regular fa-moon dark:hidden"></i>
+        <i class="fa-regular fa-sun hidden dark:inline"></i>
+      </button>
+
+      <button id="apiKeyModalBtn" class="px-2.5 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 font-medium flex items-center gap-1.5 hover:bg-indigo-100 dark:hover:bg-indigo-900/60" title="Gemini API Key Settings">
+        <i class="fa-solid fa-key text-xs"></i>
+        <span class="hidden sm:inline">Gemini Key</span>
+      </button>
+
+      <button id="openTutorModalBtn" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold flex items-center gap-1.5 shadow-sm hover:from-indigo-700 hover:to-purple-700 transition">
+        <i class="fa-solid fa-robot"></i>
+        <span>🧑‍🏫 24/7 गुरुजी AI</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Body Layout: Left = Theory + Questions, Right = Hint + Hands-on Studio + GuruJi Feedback -->
+  <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-3 sm:p-5 max-w-[1720px] mx-auto w-full">
+    
+    <!-- LEFT COLUMN: 3-Year-Old Theory & Progressively Levelled 1000 Questions -->
+    <section class="lg:col-span-6 flex flex-col gap-4">
+      
+      <!-- Theory Card with SVG & Marking -->
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 sm:p-5 shadow-sm">
+        <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">📖</span>
+            <h2 id="theoryTitle" class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">अध्याय विवरण</h2>
+          </div>
+          <button class="speaker-btn p-1.5 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition" data-target="theoryCardBody" title="सुनें">
+            <i class="fa-solid fa-volume-high text-base"></i>
+          </button>
+        </div>
+
+        <div id="theoryCardBody" class="mt-4 space-y-3.5 text-xs sm:text-sm text-gray-700 dark:text-gray-300 leading-relaxed custom-scrollbar max-h-[440px] overflow-y-auto pr-1">
+          <!-- Dynamic Content Loaded Here -->
+        </div>
+      </div>
+
+      <!-- Question Selection & Step Card (Q1 to Q1000 System) -->
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col gap-3.5">
+        
+        <!-- Level & Jump Navigation -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-gray-100 dark:border-gray-800">
+          <div class="flex items-center gap-2">
+            <span id="levelBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+              🌱 Level 1: Child-Simple (Q1-100)
+            </span>
+            <span id="chapterProgressBadge" class="text-xs text-gray-500 font-semibold">0/1000 ✓</span>
+          </div>
+
+          <!-- Quick Jump Controls -->
+          <div class="flex items-center gap-1.5 text-xs">
+            <button id="prevQBtn" class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 font-bold" title="पिछला सवाल">
+              <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <span class="text-gray-500 font-medium">Q:</span>
+            <input type="number" id="jumpQInput" min="1" max="1000" value="1" class="w-16 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-1.5 py-0.5 font-bold text-center focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            <button id="nextQBtn" class="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 font-bold" title="अगला सवाल">
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 1000 Progress Slider Bar -->
+        <div class="space-y-1">
+          <div class="flex justify-between text-[11px] text-gray-500 font-medium">
+            <span>प्रारंभिक (1)</span>
+            <span>मध्यम (250)</span>
+            <span>उन्नत (500)</span>
+            <span>प्रवीण (750)</span>
+            <span>मास्टर (1000)</span>
+          </div>
+          <input type="range" id="qSlider" min="1" max="1000" value="1" class="w-full accent-indigo-600 cursor-pointer h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg">
+          <div class="w-full bg-gray-100 dark:bg-gray-800 h-1.5 rounded-full overflow-hidden mt-1">
+            <div id="progressBarFill" class="bg-gradient-to-r from-emerald-500 via-indigo-500 to-purple-600 h-full w-[1%] transition-all duration-300"></div>
+          </div>
+        </div>
+
+        <!-- Question Prompt Box -->
+        <div class="relative bg-gray-50 dark:bg-gray-800/60 rounded-xl p-3.5 border border-gray-200/80 dark:border-gray-700/80">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1">
+              <h3 id="questionHeading" class="font-bold text-sm sm:text-base text-gray-900 dark:text-white flex items-center gap-2">
+                Question 1: प्रारंभिक सवाल
+              </h3>
+              <div id="questionInstruction" class="mt-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 space-y-1.5 leading-relaxed">
+                <!-- Detailed steps with markings here -->
+              </div>
+            </div>
+            <button class="speaker-btn p-1.5 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition shrink-0" data-target="questionInstruction" title="सवाल सुनें">
+              <i class="fa-solid fa-volume-high text-base"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- RIGHT COLUMN: Hint Box (Top) -> Hands-on Studio -> Output & GuruJi Response (Bottom) -->
+    <section class="lg:col-span-6 flex flex-col gap-4">
+
+      <!-- 💡 GuruJi's Hint Box (Positioned above hands-on studio as requested) -->
+      <div class="bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-2xl p-3 sm:p-4 transition shadow-sm">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2 text-amber-900 dark:text-amber-300 font-bold text-xs sm:text-sm">
+            <span class="text-amber-500 text-base">💡</span>
+            <span>गुरुजी की गुप्त हिंट (Hint Box)</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button id="toggleHintBtn" class="text-xs bg-amber-200/70 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-semibold px-2.5 py-1 rounded-lg hover:bg-amber-300/60 dark:hover:bg-amber-800/80 transition">
+              हिंट देखें
+            </button>
+            <button class="speaker-btn p-1 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 rounded transition" data-target="hintContent" title="हिंट सुनें">
+              <i class="fa-solid fa-volume-high text-sm"></i>
+            </button>
+          </div>
+        </div>
+        <div id="hintContent" class="hidden mt-2.5 text-xs sm:text-sm text-amber-900/90 dark:text-amber-200/90 bg-white/70 dark:bg-gray-900/60 p-3 rounded-xl border border-amber-100 dark:border-amber-900/40 leading-relaxed font-sans">
+          <!-- Hint loaded dynamically -->
+        </div>
+      </div>
+
+      <!-- Hands-on Practice Studio (Code Editor / Terminal / Live Web Preview) -->
+      <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col gap-3">
+        
+        <div class="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-gray-800">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-code text-indigo-500"></i>
+            <span id="workspaceFilename" class="text-xs sm:text-sm font-bold text-gray-800 dark:text-gray-200 tracking-wide font-mono">solution.py</span>
+            <span id="courseModeBadge" class="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded font-semibold uppercase">Hands-on Lab</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button id="resetCodeBtn" class="text-xs px-2.5 py-1 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 flex items-center gap-1 font-medium">
+              <i class="fa-solid fa-rotate-left text-[10px]"></i> Reset
+            </button>
+          </div>
+        </div>
+
+        <!-- Practice Editor Area -->
+        <div class="relative">
+          <textarea id="codeEditor" spellcheck="false" class="w-full h-56 sm:h-64 bg-gray-950 text-emerald-400 p-3.5 rounded-xl font-mono text-xs sm:text-sm leading-relaxed border border-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y custom-scrollbar" placeholder="# यहाँ अपना कोड / समाधान टाइप करें..."></textarea>
+          
+          <!-- Live Preview Iframe for Web Designing & Full Stack courses -->
+          <div id="liveWebContainer" class="hidden mt-2 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 bg-white">
+            <div class="bg-gray-100 dark:bg-gray-800 px-3 py-1 text-[11px] font-semibold text-gray-600 dark:text-gray-300 flex items-center justify-between">
+              <span><i class="fa-solid fa-globe text-blue-500 mr-1"></i> Live Web Preview (लाइव रेंडर)</span>
+              <span class="text-[10px] text-gray-400">Sandbox Preview</span>
+            </div>
+            <iframe id="livePreviewFrame" class="w-full h-44 border-0" sandbox="allow-scripts"></iframe>
+          </div>
+        </div>
+
+        <!-- Action Control Buttons -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+          <div class="flex items-center gap-2">
+            <button id="runCheckBtn" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-sm transition active:scale-95">
+              <i class="fa-solid fa-play"></i>
+              <span>रन करें और जांचें</span>
+            </button>
+            <button id="skipQuestionBtn" class="px-3 py-2 rounded-xl border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold text-xs sm:text-sm flex items-center gap-1.5 transition">
+              <i class="fa-solid fa-forward-step text-xs"></i>
+              <span>Skip</span>
+            </button>
+          </div>
+          <span class="text-[11px] text-gray-400 italic">Gemini 3 Flash Evaluator</span>
+        </div>
+
+        <!-- Output Terminal & Console -->
+        <div class="mt-2">
+          <div class="flex items-center justify-between mb-1">
+            <div class="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-300">
+              <i class="fa-solid fa-terminal text-gray-400"></i>
+              <span>आउटपुट (Console Output)</span>
+            </div>
+            <button class="speaker-btn p-1 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded transition" data-target="outputBox" title="आउटपुट सुनें">
+              <i class="fa-solid fa-volume-high text-xs"></i>
+            </button>
+          </div>
+          <div id="outputBox" class="bg-gray-950 text-gray-200 font-mono text-xs sm:text-sm p-3 rounded-xl border border-gray-800 min-h-[56px] whitespace-pre-wrap select-text">
+            — यहाँ आउटपुट दिखेगा —
+          </div>
+        </div>
+
+        <!-- GuruJi AI Feedback & Verdict Card -->
+        <div id="guruVerdictCard" class="hidden rounded-2xl p-4 border transition-all">
+          <!-- Injected dynamically on Run -->
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- 🧑‍🏫 24/7 GuruJi Gemini Chat Modal -->
+  <div id="tutorModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-5">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl w-full max-w-2xl h-[90vh] max-h-[750px] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Tutor Modal Header -->
+      <div class="px-5 py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl font-bold border border-white/30">
+            ग
+          </div>
+          <div>
+            <h3 class="font-extrabold text-base sm:text-lg flex items-center gap-2">
+              गुरुजी 24/7 AI पर्सनल ट्रेनर
+              <span class="text-[10px] bg-white/25 px-2 py-0.5 rounded-full font-semibold">Gemini 3 Flash</span>
+            </h3>
+            <p class="text-xs text-white/80">3 साल के बच्चे जैसी सरलता से इंडस्ट्री के टॉप लेवल तक कोई भी सवाल पूछें</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-white/90 flex items-center gap-1.5 cursor-pointer bg-white/10 px-2.5 py-1 rounded-lg">
+            <input type="checkbox" id="autoVoiceCheck" checked class="accent-indigo-400 rounded">
+            <span>आवाज़</span>
+          </label>
+          <button id="closeTutorModalBtn" class="text-white/80 hover:text-white p-1 rounded-lg text-lg">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Chat Messages Container -->
+      <div id="tutorChatLogs" class="flex-1 p-4 space-y-3.5 overflow-y-auto custom-scrollbar bg-gray-50/50 dark:bg-gray-950/40">
+        <!-- Initial Greetings -->
+        <div class="flex gap-2.5 max-w-[85%]">
+          <div class="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+            ग
+          </div>
+          <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl rounded-tl-sm p-3 text-xs sm:text-sm text-gray-800 dark:text-gray-200 shadow-sm leading-relaxed relative group">
+            <p><strong>नमस्ते विद्यार्थी!</strong> मैं आपका AI गुरुजी हूँ। आप मुझसे इस कोर्स, कोडिंग, एकाउंटिंग, डिजाइनिंग, वीडियो एडिटिंग या किसी भी फाइल के बारे में कभी भी पूछ सकते हैं। आप टाइप कर सकते हैं, बोलकर 🎙️ पूछ सकते हैं, या फाइल अपलोड कर सकते हैं!</p>
+            <button class="speaker-btn absolute right-2 bottom-1.5 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 p-1 opacity-80" title="सुनें">
+              <i class="fa-solid fa-volume-high text-xs"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- File Attachment preview badge -->
+      <div id="attachedFileBadge" class="hidden px-4 py-1.5 bg-indigo-50 dark:bg-indigo-950/60 border-t border-indigo-100 dark:border-indigo-900 text-xs text-indigo-700 dark:text-indigo-300 flex items-center justify-between">
+        <span class="truncate" id="attachedFileName"><i class="fa-solid fa-paperclip mr-1"></i> File attached</span>
+        <button id="removeFileBtn" class="text-indigo-500 hover:text-red-500 ml-2 font-bold"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Chat Input Area -->
+      <div class="p-3 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 flex flex-col gap-2">
+        <div class="flex items-center gap-2">
+          <label class="cursor-pointer p-2 text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition" title="फाइल अपलोड करें">
+            <i class="fa-solid fa-paperclip text-base"></i>
+            <input type="file" id="fileUploadInput" class="hidden" accept=".py,.cpp,.c,.java,.html,.css,.js,.sql,.sh,.txt,.json,.csv,.md">
+          </label>
+
+          <button id="speechInputBtn" class="p-2 text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition" title="बोलकर पूछें (Voice Mic)">
+            <i class="fa-solid fa-microphone text-base"></i>
+          </button>
+
+          <textarea id="tutorInputText" rows="1" class="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xl px-3.5 py-2 text-xs sm:text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" placeholder="कोई भी सवाल लिखें या 🎙️ दबाकर बोलें..."></textarea>
+
+          <button id="sendTutorMsgBtn" class="p-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-md transition active:scale-95 shrink-0" title="भेजें">
+            <i class="fa-solid fa-paper-plane text-sm"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ⚙️ Gemini API Key Modal -->
+  <div id="apiKeyModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl w-full max-w-md p-5 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-800">
+        <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <i class="fa-solid fa-key text-indigo-500"></i> Gemini API Key सेटिंग
+        </h3>
+        <button id="closeKeyModalBtn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="mt-4 space-y-3 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+        <p>अपनी खुद की <strong>Google Gemini API Key</strong> जोड़ें। अगर खाली छोड़ेंगे तो यह वेब-एनवायरनमेंट के डिफॉल्ट रनटाइम की से काम करेगा।</p>
+        <div>
+          <label class="block font-semibold mb-1 text-gray-700 dark:text-gray-200 text-xs">Gemini API Key:</label>
+          <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2.5 font-mono text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+        <p class="text-[11px] text-gray-400">यह Key आपके लोकल ब्राउज़र के <code>localStorage</code> में सुरक्षित रखी जाती है।</p>
+      </div>
+      <div class="mt-5 flex justify-end gap-2">
+        <button id="clearApiKeyBtn" class="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700 text-xs font-semibold hover:bg-gray-100 dark:hover:bg-gray-800">हटाएं</button>
+        <button id="saveApiKeyBtn" class="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">सेव करें</button>
+      </div>
+    </div>
+  </div>
+
+<!-- ========================================== -->
+<!-- JAVASCRIPT: Comprehensive Logic & Courses  -->
+<!-- ========================================== -->
+<script>
+/**
+ * 20 Full Basic-to-Advance Courses Master Catalog
+ */
+const COURSES = [
+  {
+    id: 'py',
+    n: '1. Python + LeetCode / HackerRank',
+    ic: '🐍',
+    f: 'solution.py',
+    mode: 'python',
+    ch: [
+      { hi: 'हेलो वर्ल्ड और print()', en: 'Hello World & print()' },
+      { hi: 'वेरिएबल और डेटा टाइप', en: 'Variables & Data Types' },
+      { hi: 'ऑपरेटर और गणित', en: 'Operators & Math' },
+      { hi: 'स्ट्रिंग्स और स्लाइसिंग', en: 'Strings & Slicing' },
+      { hi: 'इनपुट और टाइप कास्टिंग', en: 'Input & Type Casting' },
+      { hi: 'शर्तें (if, elif, else)', en: 'Conditions (if/elif/else)' },
+      { hi: 'लूप्स (for और while)', en: 'Loops (for & while)' },
+      { hi: 'लिस्ट और टपल', en: 'Lists & Tuples' },
+      { hi: 'डिक्शनरी और सेट', en: 'Dictionaries & Sets' },
+      { hi: 'फंक्शन्स और लैम्ब्डा', en: 'Functions & Lambda' },
+      { hi: 'रिकर्शन (Recursion)', en: 'Recursion Fundamentals' },
+      { hi: 'फाइल हैंडलिंग', en: 'File Handling (I/O)' },
+      { hi: 'एरर हैंडलिंग (try-except)', en: 'Exception Handling' },
+      { hi: 'OOP क्लासेज और ऑब्जेक्ट्स', en: 'OOP Classes & Objects' },
+      { hi: 'मॉड्यूल्स और पैकेजेस', en: 'Modules & VirtualEnv' },
+      { hi: 'लिस्ट कॉम्प्रिहेंशन व जनरेटर', en: 'Comprehensions & Generators' },
+      { hi: 'सॉर्टिंग और सर्चिंग अल्गोरिदम', en: 'Sorting & Searching Algorithms' },
+      { hi: 'टू पॉइंटर और स्लाइडिंग विंडो', en: 'Two Pointers & Sliding Window' },
+      { hi: 'स्टैक, क्यू और हीप', en: 'Stack, Queue & Heap' },
+      { hi: 'ट्री और ग्राफ डेटा स्ट्रक्चर', en: 'Trees & Graphs DSA' },
+      { hi: 'डायनामिक प्रोग्रामिंग (DP)', en: 'Dynamic Programming' },
+      { hi: 'इंटरव्यू प्रैक्टिस LeetCode/HackerRank', en: 'Interview Mastery Mix' }
+    ]
+  },
+  {
+    id: 'cpp',
+    n: '2. C++ & Competitive Coding',
+    ic: '⚙️',
+    f: 'main.cpp',
+    mode: 'cpp',
+    ch: [
+      { hi: 'बेसिक्स और cout', en: 'Basics & cout' },
+      { hi: 'वेरिएबल और डेटा टाइप', en: 'Variables & Types' },
+      { hi: 'ऑपरेटर और लॉजिक', en: 'Operators & Logic' },
+      { hi: 'शर्तें और लूप्स', en: 'Conditions & Loops' },
+      { hi: 'फंक्शन्स और ओवरलोडिंग', en: 'Functions & Overloading' },
+      { hi: 'ऐरे और स्ट्रिंग्स', en: 'Arrays & Strings' },
+      { hi: 'पॉइंटर और मेमोरी रेफरेंस', en: 'Pointers & References' },
+      { hi: 'क्लास और OOP कॉन्सेप्ट्स', en: 'Classes & OOP' },
+      { hi: 'इनहेरिटेंस और पॉलीमॉर्फिज्म', en: 'Inheritance & Polymorphism' },
+      { hi: 'STL (Vector, Map, Set, Queue)', en: 'STL Containers & Iterators' },
+      { hi: 'जेनेरिक टेम्पलेट्स (Templates)', en: 'Templates & Generic Code' },
+      { hi: 'फाइल I/O और एक्सेप्शन', en: 'File Streams & Exception' },
+      { hi: 'कॉम्पिटिटिव कोडिंग ट्रिक्स व बिटमैस्क', en: 'Competitive Tricks & Bitmask' }
+    ]
+  },
+  {
+    id: 'c',
+    n: '3. C Language (प्रोग्रामिंग की नींव)',
+    ic: '🔧',
+    f: 'main.c',
+    mode: 'c',
+    ch: [
+      { hi: 'बेसिक्स और printf()', en: 'Basics & printf' },
+      { hi: 'डेटा टाइप और फॉर्मेट स्पेसिफायर', en: 'Data Types & Specifiers' },
+      { hi: 'ऑपरेटर और एक्सप्रेशन्स', en: 'Operators & Expressions' },
+      { hi: 'कंडीशन और लूप्स', en: 'Decision & Loops' },
+      { hi: 'फंक्शन्स और स्कोप', en: 'Functions & Scope' },
+      { hi: 'ऐरे और स्ट्रिंग मैनीपुलेशन', en: 'Arrays & Strings' },
+      { hi: 'पॉइंटर्स और मेमोरी एड्रेस', en: 'Pointers & Address' },
+      { hi: 'स्ट्रक्चर (Struct) और यूनियन', en: 'Structures & Unions' },
+      { hi: 'डायनामिक मेमोरी (malloc, free)', en: 'Dynamic Memory (malloc/free)' },
+      { hi: 'फाइल हैंडलिंग (fopen, fclose)', en: 'File Handling' }
+    ]
+  },
+  {
+    id: 'java',
+    n: '4. Java & OOP Mastery',
+    ic: '☕',
+    f: 'Main.java',
+    mode: 'java',
+    ch: [
+      { hi: 'हेलो वर्ल्ड और क्लास स्ट्रक्चर', en: 'Hello World & Class Structure' },
+      { hi: 'वेरिएबल और प्रिमिटिव टाइप्स', en: 'Variables & Data Types' },
+      { hi: 'ऑपरेटर्स और एक्सप्रेशन्स', en: 'Operators' },
+      { hi: 'कंट्रोल फ्लो (if, switch, loops)', en: 'Control Flow' },
+      { hi: 'मेथड्स और पैरामीटर्स', en: 'Methods & Return' },
+      { hi: 'ऐरे और स्ट्रिंग मेथड्स', en: 'Arrays & String API' },
+      { hi: 'क्लास, ऑब्जेक्ट और कन्स्ट्रक्टर', en: 'Classes & Constructors' },
+      { hi: 'इनहेरिटेंस और इंटरफेस', en: 'Inheritance & Interfaces' },
+      { hi: 'एक्सेप्शन हैंडलिंग', en: 'Exception Handling' },
+      { hi: 'कलेक्शन्स फ्रेमवर्क (List, Map)', en: 'Collections Framework' },
+      { hi: 'लैम्ब्डा और स्ट्रीम API', en: 'Lambdas & Streams' },
+      { hi: 'मल्टीथ्रेडिंग और कंकरेंसी', en: 'Multithreading & Concurrency' }
+    ]
+  },
+  {
+    id: 'web',
+    n: '5. Web Designing (HTML/CSS/JS)',
+    ic: '🎨',
+    f: 'index.html',
+    mode: 'html',
+    web: true,
+    ch: [
+      { hi: 'HTML ढांचा और टैग्स', en: 'HTML5 Semantic Structure' },
+      { hi: 'टेक्स्ट, लिंक और इमेजेस', en: 'Typography, Links & Images' },
+      { hi: 'लिस्ट और टेबल्स', en: 'Lists & Tables' },
+      { hi: 'फॉर्म और इनपुट वैलिडेशन', en: 'Forms & Validation' },
+      { hi: 'CSS बेसिक्स, कलर्स और फॉन्ट्स', en: 'CSS Basics & Selectors' },
+      { hi: 'बॉक्स मॉडल (Margin, Padding)', en: 'Box Model Mastery' },
+      { hi: 'फ्लेक्सबॉक्स (Flexbox)', en: 'Flexbox Layout' },
+      { hi: 'CSS ग्रिड (CSS Grid)', en: 'CSS Grid System' },
+      { hi: 'रेस्पॉन्सिव डिज़ाइन और मीडिया क्वेरी', en: 'Responsive Design & Media Queries' },
+      { hi: 'CSS एनिमेशन और ट्रांजीशन', en: 'Animations & Transitions' },
+      { hi: 'JavaScript और DOM मैनीपुलेशन', en: 'JavaScript & DOM Events' },
+      { hi: 'इंटरैक्टिव मिनी प्रोजेक्ट्स', en: 'Modern Mini Projects' }
+    ]
+  },
+  {
+    id: 'scr',
+    n: '6. Web Scraping & Data Extraction',
+    ic: '🕷️',
+    f: 'scrape.py',
+    mode: 'python',
+    ch: [
+      { hi: 'वेबसाइट कैसे काम करती है (HTTP/DOM)', en: 'How Web Works & HTTP' },
+      { hi: 'requests लाइब्रेरी और स्टेटस कोड', en: 'Requests Library' },
+      { hi: 'BeautifulSoup से डेटा निकालना', en: 'BeautifulSoup Parser' },
+      { hi: 'CSS सेलेक्टर्स और XPath तकनीक', en: 'CSS Selectors & XPath' },
+      { hi: 'टेबल्स और लिस्ट को CSV में बदलना', en: 'HTML Tables to CSV' },
+      { hi: 'पेजिनेशन और मल्टी-पेज स्क्रैपिंग', en: 'Pagination & Multi-page' },
+      { hi: 'हिडन JSON API से डायरेक्ट डेटा लेना', en: 'Reverse Engineering JSON APIs' },
+      { hi: 'Selenium और Playwright डायनामिक साइट्स', en: 'Selenium & Headless Browsers' },
+      { hi: 'नैतिकता, रेट लिमिट और robots.txt', en: 'Ethics, Headers & Rate Limiting' },
+      { hi: 'एंड-टू-एंड ऑटोमेटेड पाइपलाइन', en: 'Full Production Pipeline' }
+    ]
+  },
+  {
+    id: 'ds',
+    n: '7. Data Analyst & Data Science',
+    ic: '📊',
+    f: 'analysis.py',
+    mode: 'python',
+    ch: [
+      { hi: 'डेटा के लिए Python बेसिक्स', en: 'Python for Data Analysis' },
+      { hi: 'NumPy ऐरे और ऑपरेशन्स', en: 'NumPy Numerical Computing' },
+      { hi: 'Pandas Series और इंडेक्सिंग', en: 'Pandas Series' },
+      { hi: 'Pandas DataFrame और स्लाइसिंग', en: 'Pandas DataFrame Deepdive' },
+      { hi: 'मिसिंग वैल्यू और डेटा क्लीनिंग', en: 'Handling Missing Values & Outliers' },
+      { hi: 'फ़िल्टर, ग्रुपबाई और एग्रीगेशन', en: 'Filtering & GroupBy' },
+      { hi: 'डेटा मर्ज, जॉइन और कॉन्कैट', en: 'Merging & Joining Datasets' },
+      { hi: 'Excel इंटीग्रेशन और फॉर्मूला', en: 'Excel File I/O' },
+      { hi: 'SQL बेसिक्स और टेबल्स', en: 'SQL for Data Analysts' },
+      { hi: 'SQL जॉइन और सब-क्वेरी', en: 'SQL Joins & Aggregates' },
+      { hi: 'डेटा विज़ुअलाइज़ेशन (Matplotlib/Seaborn)', en: 'Visualization & Charts' },
+      { hi: 'सांख्यिकी और प्रॉबेबिलिटी बेसिक्स', en: 'Descriptive & Inferential Stats' },
+      { hi: 'टाइटैनिक सर्वाइवल EDA प्रोजेक्ट', en: 'Titanic Exploratory Data Analysis' },
+      { hi: 'हाउसिंग प्राइस प्रेडिक्शन प्रोजेक्ट', en: 'Housing Price Dataset' },
+      { hi: 'फीचर इंजीनियरिंग और स्केलिंग', en: 'Feature Engineering & Encoders' },
+      { hi: 'मशीन लर्निंग (Scikit-Learn)', en: 'Machine Learning Algorithms' },
+      { hi: 'मॉडल मूल्यांकन (Accuracy, ROC, F1)', en: 'Model Evaluation Metrics' },
+      { hi: 'Kaggle कम्पटीशन वर्कफ़्लो', en: 'Kaggle End-to-End Workflow' }
+    ]
+  },
+  {
+    id: 'ai',
+    n: '8. AI & AI Video Generation',
+    ic: '🎬',
+    f: 'prompt.txt',
+    mode: 'text',
+    ch: [
+      { hi: 'AI क्या है (मशीन लर्निंग से GenAI)', en: 'What is Artificial Intelligence' },
+      { hi: 'प्रॉम्प्ट इंजीनियरिंग (Prompt Engineering)', en: 'Prompt Engineering Frameworks' },
+      { hi: 'LLM (ChatGPT, Claude, Gemini आर्किटेक्चर)', en: 'LLMs & Transformer Models' },
+      { hi: 'AI इमेज जेनरेशन (Midjourney, DALL-E)', en: 'AI Image Generation Tools' },
+      { hi: 'डिफ्यूजन मॉडल और LoRA', en: 'Stable Diffusion & LoRAs' },
+      { hi: 'AI वीडियो टूल्स (Runway, Kling, Sora)', en: 'AI Video Engines' },
+      { hi: 'कैमरा एंगल, लाइटिंग और मोशन प्रॉम्प्ट', en: 'Camera Movements & Cinematic Prompts' },
+      { hi: 'AI आवाज़ और म्यूजिक क्लोनिंग', en: 'AI Voice Cloning & Sound Design' },
+      { hi: 'वीडियो एडिटिंग, अपस्केलिंग और लिप-सिंक', en: 'Upscaling, Inpainting & Lip-Sync' },
+      { hi: 'पूरी AI शॉर्ट फिल्म पाइपलाइन', en: 'Full AI Short Film Production' },
+      { hi: 'AI एजेंट्स और ऑटोमेशन वर्कफ्लो', en: 'Autonomous AI Agents' },
+      { hi: 'AI नैतिकता, कॉपीराइट और डीपफेक सुरक्षा', en: 'AI Ethics & Copyright Safety' }
+    ]
+  },
+  {
+    id: 'lx',
+    n: '9. Linux & Kali Linux Cybersecurity',
+    ic: '🐧',
+    f: 'terminal.sh',
+    mode: 'bash',
+    ch: [
+      { hi: 'टर्मिनल बेसिक्स और शेल परिचय', en: 'Terminal Basics & Shell Architecture' },
+      { hi: 'नेविगेशन (cd, ls, pwd, find)', en: 'Filesystem Navigation' },
+      { hi: 'फाइल ऑपरेशन्स (cp, mv, rm, touch)', en: 'File Manipulation Commands' },
+      { hi: 'grep, awk, sed और टेक्स्ट फिल्टर', en: 'Text Processing (grep, awk, sed)' },
+      { hi: 'परमिशन्स और chmod / chown', en: 'Permissions & User Rights' },
+      { hi: 'यूज़र और ग्रुप मैनेजमेंट', en: 'User & Group Management' },
+      { hi: 'प्रोसेस और बैकग्राउंड जॉब्स (ps, top, kill)', en: 'Process Management' },
+      { hi: 'पैकेज मैनेजर (apt, dpkg, snap)', en: 'Package Managers' },
+      { hi: 'बैश स्क्रिप्टिंग और ऑटोमेशन', en: 'Bash Scripting & Loops' },
+      { hi: 'नेटवर्किंग कमांड्स (ping, netstat, curl, ssh)', en: 'Linux Networking Utilities' },
+      { hi: 'सिस्टम सर्विसेज और क्रॉन जॉब्स (systemctl, cron)', en: 'Systemd & Cron Automation' },
+      { hi: 'Kali Linux सेटअप और टूल्स ओवरव्यू', en: 'Kali Linux Pentest Environment' },
+      { hi: 'नेटवर्क रेकॉन और Nmap स्कैनिंग (Ethical Lab)', en: 'Network Recon & Nmap (Auth Lab)' },
+      { hi: 'वेब सिक्यूरिटी बेसिक्स (OWASP Top 10)', en: 'Web Vulnerabilities Basics' },
+      { hi: 'क्रिप्टोग्राफी, हैशिंग और पासवर्ड सिक्यूरिटी', en: 'Cryptography & Hashing' },
+      { hi: 'सिक्यूरिटी रिपोर्टिंग और प्रोफेशनल एथिक्स', en: 'Audit Reporting & Legal Ethics' }
+    ]
+  },
+  {
+    id: 'fullstack',
+    n: '10. Full Stack Web Development (MERN / Next.js)',
+    ic: '🌐',
+    f: 'server.js',
+    mode: 'javascript',
+    web: true,
+    ch: [
+      { hi: 'फुल स्टैक आर्किटेक्चर (Client vs Server vs DB)', en: 'Full Stack Web Architecture' },
+      { hi: 'Node.js और NPM पैकेज मैनेजर', en: 'Node.js Runtime & NPM' },
+      { hi: 'Express.js बैकएंड और राउटिंग', en: 'Express.js REST APIs' },
+      { hi: 'REST API डिज़ाइन, स्टेटस कोड और Middleware', en: 'Middleware & Request Flow' },
+      { hi: 'MongoDB और Mongoose स्कीमा डिज़ाइन', en: 'MongoDB & Mongoose Modeling' },
+      { hi: 'CRUD ऑपरेशन्स और वैलिडेशन', en: 'Full Database CRUD' },
+      { hi: 'JWT ऑथेंटिकेशन और पासवर्ड हैशिंग (bcrypt)', en: 'JWT Auth & Security' },
+      { hi: 'React.js बेसिक्स, JSX और कंपोनेंट्स', en: 'React Components & Props' },
+      { hi: 'React स्टेट (useState, useEffect, Custom Hooks)', en: 'React Hooks & State' },
+      { hi: 'Frontend + Backend API इंटीग्रेशन (Axios/Fetch)', en: 'Connecting Front to Back' },
+      { hi: 'ग्लोबल स्टेट (Redux Toolkit / Context API)', en: 'State Management' },
+      { hi: 'Next.js 14+ SSR, SSG और सर्वर एक्शन्स', en: 'Next.js App Router' },
+      { hi: 'PostgreSQL और Prisma ORM', en: 'Relational DBs with Prisma' },
+      { hi: 'WebSocket और रीयल-टाइम चैट ऐप्स', en: 'WebSockets & Socket.io' },
+      { hi: 'डॉकर (Docker) कंटेनराइजेशन बेसिक्स', en: 'Dockerizing Full Stack Apps' },
+      { hi: 'क्लाउड डिप्लॉयमेंट (Vercel, Render, AWS)', en: 'CI/CD & Cloud Deployment' }
+    ]
+  },
+  {
+    id: 'net',
+    n: '11. Computer Networking (बेसिक से एडवांस)',
+    ic: '📡',
+    f: 'network_sim.txt',
+    mode: 'text',
+    ch: [
+      { hi: 'नेटवर्किंग क्या है और LAN/WAN/MAN', en: 'Network Fundamentals & Types' },
+      { hi: 'OSI 7 लेयर मॉडल की आसान व्याख्या', en: 'OSI 7-Layer Model Simplified' },
+      { hi: 'TCP/IP मॉडल और थ्री-वे हैंडशेक', en: 'TCP/IP Suite & 3-Way Handshake' },
+      { hi: 'IP एड्रेस (IPv4 vs IPv6) और क्लासेस', en: 'IP Addressing Architecture' },
+      { hi: 'सबनेटिंग (Subnetting) और CIDR नोटेशन', en: 'Subnetting & VLSM Calculations' },
+      { hi: 'DNS, DHCP, NAT और गेटवे कैसे काम करते हैं', en: 'DNS, DHCP & NAT Protocols' },
+      { hi: 'राउटिंग प्रोटोकॉल्स (RIP, OSPF, BGP)', en: 'Routing Algorithms & Protocols' },
+      { hi: 'स्विचिंग, VLANs और ट्रंकिंग', en: 'Switches, VLANs & Trunking' },
+      { hi: 'Wireshark से पैकेट कैप्चर और एनालिसिस', en: 'Wireshark Packet Analysis' },
+      { hi: 'नेटवर्क फायरवॉल, VPN और प्रॉक्सी', en: 'Firewalls, VPNs & Proxies' },
+      { hi: 'DDoS, Man-in-the-Middle और नेटवर्क सुरक्षा', en: 'Network Attacks & Defense' },
+      { hi: 'क्लाउड नेटवर्किंग (AWS VPC, Peering, Subnets)', en: 'Cloud VPC Networking' }
+    ]
+  },
+  {
+    id: 'excel',
+    n: '12. Microsoft Excel & Advanced Excel',
+    ic: '📗',
+    f: 'workbook.csv',
+    mode: 'excel',
+    ch: [
+      { hi: 'Excel इंटरफेस, सेल, रो और कॉलम बेसिक्स', en: 'Excel Grid Basics & Shortcuts' },
+      { hi: 'बेसिक फॉर्मूले (SUM, AVERAGE, COUNT, MIN, MAX)', en: 'Basic Math & Stats Formulas' },
+      { hi: 'कंडीशनल लॉजिक (IF, AND, OR, IFS)', en: 'Logical IF, AND, OR Formulas' },
+      { hi: 'लुकअप फॉर्मूले (VLOOKUP, HLOOKUP)', en: 'VLOOKUP & HLOOKUP Mastery' },
+      { hi: 'आधुनिक लुकअप: XLOOKUP और INDEX-MATCH', en: 'Modern XLOOKUP & INDEX MATCH' },
+      { hi: 'टेक्स्ट फॉर्मूले (CONCAT, LEFT, RIGHT, MID, TRIM)', en: 'Text Cleaning Formulas' },
+      { hi: 'कंडीशनल फॉर्मेटिंग और डेटा वैलिडेशन', en: 'Conditional Formatting & Rules' },
+      { hi: 'पिवट टेबल (Pivot Table) और स्लाइसर', en: 'Pivot Tables & Dynamic Slicers' },
+      { hi: 'पिवट चार्ट और डायनामिक डैशबोर्ड डिज़ाइन', en: 'Interactive Dashboard Design' },
+      { hi: 'पावर क्वेरी (Power Query) से डेटा ट्रांसफॉर्मेशन', en: 'Power Query ETL Automation' },
+      { hi: 'What-If एनालिसिस और गोल सीक (Goal Seek)', en: 'Scenario Manager & Goal Seek' },
+      { hi: 'Excel मैक्रोज़ और VBA ऑटोमेशन बेसिक्स', en: 'Macros & VBA Automation Intro' }
+    ]
+  },
+  {
+    id: 'tally',
+    n: '13. Tally ERP 9 / TallyPrime with GST',
+    ic: '💼',
+    f: 'tally_ledger.txt',
+    mode: 'tally',
+    ch: [
+      { hi: 'अकाउंटिंग के सुनहरे नियम (Golden Rules of Accounting)', en: 'Golden Rules of Accounting' },
+      { hi: 'TallyPrime कंपनी बनाना और कॉन्फ़िगरेशन', en: 'Company Creation & Setup' },
+      { hi: 'ग्रुप्स और लेज़र (Ledger) निर्माण', en: 'Groups & Ledgers Architecture' },
+      { hi: 'वाउचर एंट्री (Payment, Receipt, Contra)', en: 'Payment, Receipt & Contra Vouchers' },
+      { hi: 'इन्वेंटरी और स्टॉक आइटम (Units, Groups, Items)', en: 'Inventory & Stock Management' },
+      { hi: 'खरीद (Purchase) और बिक्री (Sales) वाउचर', en: 'Purchase & Sales Invoicing' },
+      { hi: 'डेबिट नोट और क्रेडिट नोट (Returns)', en: 'Debit & Credit Note Entries' },
+      { hi: 'GST बेसिक्स (CGST, SGST, IGST कॉन्फ़िगरेशन)', en: 'GST Rates & Tax Classification' },
+      { hi: 'GST चालान और ई-वे बिल (E-Way Bill) तैयारी', en: 'GST Invoicing & E-Way Bills' },
+      { hi: 'बैंक रिकॉन्सिलेशन स्टेटमेंट (BRS)', en: 'Bank Reconciliation (BRS)' },
+      { hi: 'TDS और पेरोल (Salary Processing) बेसिक्स', en: 'TDS Deductions & Payroll' },
+      { hi: 'प्रॉफ़िट & लॉस अकाउंट, बैलेंस शीट और GST रिटर्न', en: 'Financial Statements & GSTR-1/3B' }
+    ]
+  },
+  {
+    id: 'sql',
+    n: '14. SQL & Database Mastery',
+    ic: '🗄️',
+    f: 'queries.sql',
+    mode: 'sql',
+    ch: [
+      { hi: 'डेटाबेस क्या है और RDBMS कॉन्सेप्ट', en: 'RDBMS Fundamentals' },
+      { hi: 'टेबल बनाना (CREATE, ALTER, DROP, TRUNCATE)', en: 'DDL: Tables & Data Types' },
+      { hi: 'डेटा इंसर्ट, अपडेट और डिलीट (INSERT, UPDATE, DELETE)', en: 'DML Commands' },
+      { hi: 'डेटा चुनना और फिल्टर (SELECT, WHERE, LIKE, IN)', en: 'Filtering & Conditional Select' },
+      { hi: 'सॉर्टिंग और लिमिट (ORDER BY, LIMIT, DISTINCT)', en: 'Sorting & Limiting Results' },
+      { hi: 'एग्रीगेट फंक्शन्स और GROUP BY, HAVING', en: 'Aggregation & GROUP BY' },
+      { hi: 'SQL जॉइन्स (INNER, LEFT, RIGHT, FULL OUTER JOIN)', en: 'Complete Joins Mastery' },
+      { hi: 'सब-क्वेरी (Subqueries) और CTE (WITH क्लॉज)', en: 'Subqueries & CTE Expressions' },
+      { hi: 'विंडो फंक्शन्स (ROW_NUMBER, RANK, DENSE_RANK)', en: 'Analytical Window Functions' },
+      { hi: 'स्ट्रिंग, डेट और मैथमेटिकल फंक्शन्स', en: 'Built-in Scalar Functions' },
+      { hi: 'इंडेक्स (Indexes) और क्वेरी परफॉरमेंस ऑप्टिमाइज़ेशन', en: 'Indexes & Execution Plan' },
+      { hi: 'ट्रांजेक्शन (ACID, COMMIT, ROLLBACK) और सिक्योरिटी', en: 'Transactions & ACID Compliance' }
+    ]
+  },
+  {
+    id: 'pbi',
+    n: '15. Power BI & Business Intelligence',
+    ic: '📈',
+    f: 'powerbi_model.dax',
+    mode: 'powerbi',
+    ch: [
+      { hi: 'Power BI क्या है और बिज़नेस इंटेलिजेंस', en: 'Power BI Architecture & Flow' },
+      { hi: 'डेटा लोड करना (Excel, SQL, Web)', en: 'Connecting to Data Sources' },
+      { hi: 'Power Query एडिटर में डेटा ट्रांसफॉर्मेशन', en: 'Power Query ETL Transformations' },
+      { hi: 'डेटा मॉडलिंग और रिलेशनशिप्स (Star Schema)', en: 'Data Modeling & Relationships' },
+      { hi: 'DAX बेसिक्स: Calculated Columns vs Measures', en: 'DAX Calculated Columns vs Measures' },
+      { hi: 'महत्वपूर्ण DAX फॉर्मूले (CALCULATE, SUMX, RELATED)', en: 'Essential DAX Functions' },
+      { hi: 'टाइम इंटेलिजेंस DAX (YTD, MTD, SamePeriodLastYear)', en: 'Time Intelligence DAX' },
+      { hi: 'विज़ुअलाइज़ेशन (Bar, Line, Card, Treemap, Matrix)', en: 'Core Visuals & Formatting' },
+      { hi: 'इंटरैक्टिव स्लाइसर्स, ड्रिल-थ्रू और बुकमार्क्स', en: 'Slicers, Drillthrough & Bookmarks' },
+      { hi: 'एग्जीक्यूटिव सेल्स डैशबोर्ड तैयार करना', en: 'Building Executive Sales Dashboard' },
+      { hi: 'Row-Level Security (RLS) और यूजर रोल्स', en: 'Security & User Filtering' },
+      { hi: 'Power BI सर्विस पर रिपोर्ट पब्लिश और शेयर करना', en: 'Publishing, Workspaces & Gateway' }
+    ]
+  },
+  {
+    id: 'vid3d',
+    n: '16. 2D & 3D Video Making (Blender / Toon)',
+    ic: '🎞️',
+    f: 'storyboard.txt',
+    mode: 'text',
+    ch: [
+      { hi: 'एनिमेशन के 12 सिद्धांत (12 Principles of Animation)', en: '12 Principles of Animation' },
+      { hi: 'स्टोरीबोर्डिंग और सीन प्लानिंग', en: 'Storyboarding & Scene Beats' },
+      { hi: '2D कैरेक्टर डिज़ाइन और रिगिंग बेसिक्स', en: '2D Character Vector Design' },
+      { hi: 'कीफ्रेम्स (Keyframes), ईजिंग और टाइमिंग', en: 'Keyframes, Graph Editor & Easing' },
+      { hi: '3D स्पेस और ब्लेंडर (Blender) इंटरफेस परिचय', en: 'Blender 3D Viewport Navigation' },
+      { hi: '3D मेश मॉडलिंग (Primitives, Extrude, Loop Cut)', en: '3D Mesh Modeling Basics' },
+      { hi: 'मटेरियल्स, शेडर्स और PBR टेक्सचरिंग', en: 'Materials, BSDF & Texturing' },
+      { hi: 'लाइटिंग (Three-Point Lighting) और कैमरा सेटअप', en: 'Cinematic Lighting & Camera' },
+      { hi: '3D बोन रिगिंग और कैरेक्टर वॉक साइकिल', en: 'Armature Rigging & Walk Cycles' },
+      { hi: 'पार्टिकल सिस्टम्स (धुआँ, आग, पानी, स्पार्क)', en: 'Physics & Particle Simulation' },
+      { hi: 'Eevee vs Cycles रेंडरिंग सेटिंग्स', en: 'Render Engines & Optimization' },
+      { hi: 'साउंड सिंक, कंपोजिटिंग और फाइनल एक्सपोर्ट', en: 'Compositing & Video Export' }
+    ]
+  },
+  {
+    id: 'davinci',
+    n: '17. Video Editing with DaVinci Resolve',
+    ic: '✂️',
+    f: 'timeline.txt',
+    mode: 'text',
+    ch: [
+      { hi: 'DaVinci Resolve इंटरफेस और मीडिया मैनेजमेंट', en: 'Workspace & Media Pool Setup' },
+      { hi: 'कट पेज (Cut Page) पर फास्ट रफ-कट एडिट', en: 'Fast Rough-Cuts on Cut Page' },
+      { hi: 'एडिट पेज (Edit Page): टाइमलाइन, टूल्स और स्लाइसिंग', en: 'Edit Page Timeline Mastery' },
+      { hi: 'जे-कट, एल-कट और स्मूथ ट्रांजीशन तकनीक', en: 'J-Cuts, L-Cuts & Transitions' },
+      { hi: 'ऑडियो मिक्सिंग और Fairlight में नॉइज़ रिडक्शन', en: 'Audio Leveling & Fairlight EQ' },
+      { hi: 'फ्यूजन (Fusion) नोड्स: मोशन टाइटल्स और VFX', en: 'Fusion Node-based Motion Graphics' },
+      { hi: 'कलर पेज (Color Page) बेसिक्स: प्राइमरी व्हील्स और नोड्स', en: 'Color Wheels, Scopes & Primary' },
+      { hi: 'कलर मैचिंग और प्रोफेशनल LUTs का उपयोग', en: 'Shot Matching & LUT Applications' },
+      { hi: 'स्किन टोन करेक्शन और सेकेंडरी ग्रेडिंग', en: 'Skin Tone Vectorscope Correction' },
+      { hi: 'ग्रीन स्क्रीन (Chroma Key) और मास्क ट्रैकिंग', en: 'Delta Keyer & Power Windows' },
+      { hi: 'स्पीड रैंपिंग, रीटाइमिंग और डायनामिक जूम', en: 'Speed Ramps & Optical Flow' },
+      { hi: 'YouTube, Reels और 4K डिलीवरी एक्सपोर्ट सेटिंग्स', en: 'Deliver Page Codecs & Bitrates' }
+    ]
+  },
+  {
+    id: 'design',
+    n: '18. Graphic Design & UI/UX (Figma)',
+    ic: '✒️',
+    f: 'design_specs.json',
+    mode: 'json',
+    ch: [
+      { hi: 'डिज़ाइन के बुनियादी तत्व (रंग, स्पेस, कंट्रास्ट, बैलेंस)', en: 'Elements & Principles of Design' },
+      { hi: 'कलर थ्योरी और साइकोलॉजी (Palette Creation)', en: 'Color Theory & Harmonious Palettes' },
+      { hi: 'टाइपोग्राफी (Typography, Font Pairing, Hierarchy)', en: 'Typography & Visual Hierarchy' },
+      { hi: 'Figma इंटरफेस, फ्रेम्स और वेक्टर टूल्स', en: 'Figma Canvas, Frames & Vectors' },
+      { hi: 'ऑटो-लेआउट (Auto Layout) और रेस्पॉन्सिव डिज़ाइन', en: 'Auto Layout & Constraints' },
+      { hi: 'कंपोनेंट्स, वेरिएंट्स और डिज़ाइन सिस्टम्स', en: 'Components, Variants & Design Tokens' },
+      { hi: 'वायरफ्रेमिंग और यूजर फ्लो मैपिंग', en: 'Low-Fi Wireframes & User Journey' },
+      { hi: 'हाई-फिडेलिटी UI डिज़ाइन (App & Web Layouts)', en: 'High-Fi UI Screen Creation' },
+      { hi: 'इंटरैक्टिव प्रोटोटाइपिंग और स्मार्ट एनिमेट', en: 'Interactive Prototypes & Smart Animate' },
+      { hi: 'लोगो और ब्रांड आइडेंटिटी डिज़ाइन गाइडलाइंस', en: 'Logo Design & Brand Guidelines' },
+      { hi: 'सोशल मीडिया पोस्ट और थंबनेल डिज़ाइन तकनीक', en: 'Social Media Ad Creatives' },
+      { hi: 'डेवलपर हैंडऑफ और डिज़ाइन एक्सपोर्टिंग', en: 'Dev Handoff & Assets Export' }
+    ]
+  },
+  {
+    id: 'appdev',
+    n: '19. Mobile App Development (Flutter / React Native)',
+    ic: '📱',
+    f: 'App.tsx',
+    mode: 'javascript',
+    ch: [
+      { hi: 'मोबाइल ऐप इकोसिस्टम (Native vs Cross-Platform)', en: 'Mobile Architecture Overview' },
+      { hi: 'Dart / TypeScript लैंग्वेज क्रैश कोर्स', en: 'Dart / TS Language Foundation' },
+      { hi: 'विजेट्स और कंपोनेंट्स (UI Blocks)', en: 'Widget Tree & Component Basics' },
+      { hi: 'लेआउट्स (Column, Row, Container, Flex)', en: 'Flex Layouts & Safe Area' },
+      { hi: 'स्टेट मैनेजमेंट (Stateful Widgets, Providers, Hooks)', en: 'State Management Approaches' },
+      { hi: 'नेविगेशन और स्क्रीन रूटिंग (Stack, Tabs, Drawer)', en: 'Navigation Stacks & Tabs' },
+      { hi: 'नेटवर्क कॉल्स और REST API कंजम्पशन', en: 'Fetching Online API Data' },
+      { hi: 'लोकल स्टोरेज (AsyncStorage, SQLite, Hive)', en: 'Persistent Offline Storage' },
+      { hi: 'डिवाइस फीचर्स (कैमरा, गैलरी, GPS लोकेशन)', en: 'Device Hardware Permissions' },
+      { hi: 'पुश नोटिफिकेशन्स (Firebase FCM सेटअप)', en: 'Firebase & Push Notifications' },
+      { hi: 'एनिमेशन्स और गेस्चर डिटेक्टर', en: 'Gestures & Micro-Interactions' },
+      { hi: 'Google Play Store और Apple App Store पब्लिशिंग', en: 'Build APK/AAB & Store Release' }
+    ]
+  },
+  {
+    id: 'mktg',
+    n: '20. Digital Marketing & Growth Hacking',
+    ic: '🚀',
+    f: 'campaign_strategy.json',
+    mode: 'json',
+    ch: [
+      { hi: 'डिजिटल मार्केटिंग बेसिक्स और फनल (AIDA मॉडल)', en: 'Digital Marketing Fundamentals & Funnels' },
+      { hi: 'कस्टमर पर्सोना और ऑडियंस रिसर्च', en: 'Buyer Persona & Target Research' },
+      { hi: 'SEO बेसिक्स: कीवर्ड रिसर्च और सर्च इंटेंट', en: 'Keyword Research & Search Intent' },
+      { hi: 'ऑन-पेज SEO (Title, Meta, Headers, Content)', en: 'On-Page SEO Optimization' },
+      { hi: 'ऑफ-पेज SEO, बैकलिंक्स और डोमेन अथॉरिटी', en: 'Link Building & Authority' },
+      { hi: 'टेक्निकल SEO, साइट स्पीड और क्रॉलिंग', en: 'Technical SEO & Core Web Vitals' },
+      { hi: 'Google Ads: सर्च कैंपेन और बिडिंग स्ट्रैटेजी', en: 'Google Search Ads & PPC' },
+      { hi: 'Meta Ads (Facebook & Instagram): पिक्सल और ऑडियंस', en: 'Meta Pixel & Retargeting Campaigns' },
+      { hi: 'कंटेंट मार्केटिंग और वायरल कॉपीराइटिंग', en: 'High-Converting Copywriting' },
+      { hi: 'ईमेल मार्केटिंग और ऑटोमेशन सीक्वेंस', en: 'Email Lead Nurturing Workflows' },
+      { hi: 'Google Analytics 4 (GA4) और कन्वर्शन ट्रैकिंग', en: 'GA4 Metrics & Conversion Tracking' },
+      { hi: 'ग्रोथ हैकिंग और A/B टेस्टिंग एक्सपेरिमेंट्स', en: 'Growth Hacking & A/B Experimentation' }
+    ]
+  }
+];
+
+/**
+ * Global App State
+ */
+let currentCourseIdx = 0;
+let currentChapterIdx = 0;
+let currentQuestionNum = 1; // 1 to 1000
+let currentLang = localStorage.getItem('ait3_lang') || 'hi';
+let geminiApiKey = localStorage.getItem('ait3_gemini_key') || '';
+let userProgress = JSON.parse(localStorage.getItem('ait3_progress') || '{}');
+let tutorChatHistory = [];
+let attachedFileContent = null;
+let currentLoadedQuestion = null;
+
+// DOM Selectors
+const $ = (id) => document.getElementById(id);
+
+/**
+ * Text-to-Speech Engine
+ */
+function speakText(text, langOverride) {
+  if (!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  
+  // Clean raw markdown, hashes, asterisks
+  const clean = text.replace(/[`#*_]/g, '').slice(0, 1500);
+  const utterance = new SpeechSynthesisUtterance(clean);
+  utterance.lang = langOverride || (currentLang === 'hi' ? 'hi-IN' : 'en-US');
+  utterance.rate = 0.95;
+  window.speechSynthesis.speak(utterance);
+}
+
+// Global delegated speaker click handler
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.speaker-btn');
+  if (!btn) return;
+  const targetId = btn.getAttribute('data-target');
+  let text = '';
+  if (targetId) {
+    const el = $(targetId);
+    if (el) text = el.innerText || el.textContent;
+  } else {
+    const parentBlock = btn.parentElement;
+    if (parentBlock) text = parentBlock.innerText || parentBlock.textContent;
+  }
+  if (text.trim()) {
+    speakText(text);
+  }
+});
+
+/**
+ * Gemini API Request Wrapper (Supports Gemini 3 Flash Preview)
+ */
+async function callGeminiAPI(userPrompt, systemInstruction = '', jsonResponse = false) {
+  const apiKey = geminiApiKey || ""; // Canvas provides runtime fallback when empty
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+  const payload = {
+    contents: [{ parts: [{ text: userPrompt }] }]
+  };
+
+  if (systemInstruction) {
+    payload.systemInstruction = {
+      parts: [{ text: systemInstruction }]
+    };
+  }
+
+  if (jsonResponse) {
+    payload.generationConfig = {
+      responseMimeType: "application/json"
+    };
+  }
+
+  // Exponential backoff
+  let delay = 1000;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}`);
+      }
+
+      const data = await response.json();
+      const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!rawText) throw new Error("Empty response from Gemini API");
+
+      return jsonResponse ? JSON.parse(rawText) : rawText;
+    } catch (err) {
+      if (attempt === 2) throw err;
+      await new Promise(r => setTimeout(r, delay));
+      delay *= 2;
+    }
+  }
+}
+
+/**
+ * Progressive Difficulty Metadata (Q1 to Q1000)
+ */
+function getProgressiveDifficultyInfo(qNum) {
+  if (qNum <= 100) {
+    return {
+      tier: 'Level 1: Child-Simple (बच्चा स्तर 3-साल की समझ)',
+      badgeClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300',
+      difficultyPrompt: 'total absolute beginner child-level (3-year old analogies), exactly 1 tiny change or step, friendly guidance.'
+    };
+  } else if (qNum <= 400) {
+    return {
+      tier: 'Level 2: Intermediate Foundations (मध्यम स्तर)',
+      badgeClass: 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300',
+      difficultyPrompt: 'elementary intermediate, multi-step parameters, slight real-world variations and logic.'
+    };
+  } else if (qNum <= 700) {
+    return {
+      tier: 'Level 3: Advanced Problem Solver (उन्नत स्तर)',
+      badgeClass: 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300 border-purple-300',
+      difficultyPrompt: 'advanced scenario, boundary conditions, edge cases, professional techniques.'
+    };
+  } else {
+    return {
+      tier: 'Level 4: Industry Pro & LeetCode Hard (विशेषज्ञ स्तर)',
+      badgeClass: 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border-rose-300',
+      difficultyPrompt: 'expert industrial grade, production edge cases, interview high-complexity questions.'
+    };
+  }
+}
+
+/**
+ * Generate Visual Illustrated SVG for a 3-Year Old
+ */
+function generateVisualDiagramSVG(topicTitle, courseId) {
+  // Return an engaging, annotated SVG diagram with arrows, markings, and child-friendly metaphors
+  return `
+  <div class="my-3 p-3 bg-indigo-50/60 dark:bg-gray-800/80 rounded-xl border border-indigo-100 dark:border-indigo-900/50">
+    <div class="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 mb-1 flex items-center justify-between">
+      <span>🎨 सचित्र समझ (Visual Concept Diagram)</span>
+      <span class="text-[10px] text-gray-500">चित्र पर ध्यान दें 👇</span>
+    </div>
+    <svg viewBox="0 0 520 160" class="w-full h-auto max-h-44 rounded-lg bg-white dark:bg-gray-900 border border-indigo-100 dark:border-gray-800 shadow-inner">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#6366f1"/>
+        </marker>
+        <linearGradient id="boxGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#38bdf8"/>
+          <stop offset="100%" stop-color="#2563eb"/>
+        </linearGradient>
+        <linearGradient id="boxGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#34d399"/>
+          <stop offset="100%" stop-color="#059669"/>
+        </linearGradient>
+      </defs>
+      
+      <!-- Box 1: Input / Command -->
+      <rect x="25" y="35" width="130" height="75" rx="12" fill="url(#boxGrad1)" stroke="#1d4ed8" stroke-width="2"/>
+      <text x="90" y="65" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="bold">📥 निर्देश (Input)</text>
+      <text x="90" y="88" text-anchor="middle" fill="#dbeafe" font-size="11" font-weight="600">तोते को क्या बोला?</text>
+      <line x1="45" y1="96" x2="135" y2="96" stroke="#fde047" stroke-width="3" stroke-linecap="round"/>
+
+      <!-- Arrow 1 with Process -->
+      <path d="M 160 72 L 235 72" stroke="#6366f1" stroke-width="3" stroke-dasharray="4 2" marker-end="url(#arrow)"/>
+      <text x="198" y="58" text-anchor="middle" fill="#6366f1" font-size="10" font-weight="bold">मशीन प्रोसेस</text>
+
+      <!-- Center Machine Box -->
+      <circle cx="270" cy="72" r="32" fill="#f8fafc" stroke="#4f46e5" stroke-width="3"/>
+      <text x="270" y="70" text-anchor="middle" font-size="20">🤖</text>
+      <text x="270" y="90" text-anchor="middle" fill="#312e81" font-size="9" font-weight="bold">CPU/इंजन</text>
+
+      <!-- Arrow 2 -->
+      <path d="M 305 72 L 365 72" stroke="#6366f1" stroke-width="3" marker-end="url(#arrow)"/>
+
+      <!-- Box 2: Screen Output -->
+      <rect x="370" y="35" width="125" height="75" rx="12" fill="url(#boxGrad2)" stroke="#047857" stroke-width="2"/>
+      <text x="432" y="65" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="bold">🖥️ नतीजा (Output)</text>
+      <text x="432" y="88" text-anchor="middle" fill="#ecfdf5" font-size="11" font-weight="bold">स्क्रीन पर दिखा!</text>
+      <!-- Red circle highlight around output -->
+      <ellipse cx="432" cy="72" rx="55" ry="30" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="3 3"/>
+
+      <!-- Markings and pointers -->
+      <path d="M 90 120 L 90 135 L 200 135" stroke="#ef4444" stroke-width="1.5" fill="none"/>
+      <text x="205" y="139" fill="#ef4444" font-size="10" font-weight="bold">✓ Step 1: यहाँ कोड टाइप करो</text>
+    </svg>
+  </div>`;
+}
+
+/**
+ * Load Chapter Theory
+ */
+async function loadTheory() {
+  const course = COURSES[currentCourseIdx];
+  const chapter = course.ch[currentChapterIdx];
+  const theoryBody = $('theoryCardBody');
+  const theoryTitle = $('theoryTitle');
+
+  const titleText = currentLang === 'hi' 
+    ? `${chapter.hi} (अध्याय ${currentChapterIdx + 1})` 
+    : `${chapter.en} (Chapter ${currentChapterIdx + 1})`;
+  theoryTitle.textContent = titleText;
+
+  theoryBody.innerHTML = `
+    <div class="flex items-center justify-center p-6 text-indigo-600 dark:text-indigo-400">
+      <i class="fa-solid fa-spinner fa-spin text-2xl mr-3"></i>
+      <span class="font-medium">गुरुजी अध्याय की सचित्र थ्योरी तैयार कर रहे हैं...</span>
+    </div>`;
+
+  const cacheKey = `ait3_th_${course.id}_${currentChapterIdx}_${currentLang}`;
+  const cached = localStorage.getItem(cacheKey);
+
+  if (cached) {
+    renderTheoryHTML(JSON.parse(cached));
+    return;
+  }
+
+  // System instruction for GuruJi (Warm Indian teacher for 3-year-olds to Pro)
+  const systemPrompt = `You are GuruJi, a warm, caring Indian personal teacher. Teach absolute beginners using joyful 3-year-old analogies first with marked phrases, then transition into real industrial detail. Language: ${currentLang === 'hi' ? 'Natural conversational Hindi in Devanagari with English terms in brackets' : 'Clear, simple English'}. Return JSON ONLY.`;
+
+  const userQuery = `Course: "${course.n}". Chapter: "${chapter.en}".
+Create complete theory with:
+{
+  "analogy": "3-year-old child analogy (e.g. cute parrot, toy box, candy shop) with marked phrases",
+  "what_is_it": "clear explanation of what this concept is",
+  "why_used": "real practical reason why companies, programmers or accountants use this",
+  "what_happens": "what exactly happens when executed, along with 2 common beginner mistakes to avoid",
+  "steps": ["Step 1 action...", "Step 2 action...", "Step 3 action...", "Step 4 action..."],
+  "code_snippet": "short starter example code",
+  "industry_update": "latest 2026 industry update or modern trend in this topic"
+}`;
+
+  try {
+    const data = await callGeminiAPI(userQuery, systemPrompt, true);
+    localStorage.setItem(cacheKey, JSON.stringify(data));
+    renderTheoryHTML(data);
+  } catch (err) {
+    // High-quality static fallback if offline or API limit
+    const fallbackData = {
+      analogy: `सोचो तुम्हारे पास एक प्यारा सा तोता है 🦜 जो वही बोलता है जो तुम प्यार से सिखाते हो। जब तुम बोलते हो 'नमस्ते', तो वह तुरंत खुश होकर 'नमस्ते' बोलता है। इस चैप्टर का काम भी कंप्यूटर को ऐसे ही प्यार से बोलना और काम सिखाना है!`,
+      what_is_it: `${chapter.hi} इस पूरे कोर्स की सबसे जरूरी नींव है। इसके माध्यम से कंप्यूटर हमारे दिए गए निर्देशों को एक-एक करके समझता है और स्क्रीन पर तुरंत असर दिखाता है।`,
+      why_used: `कंपनियां और सॉफ्टवेयर इंजीनियर्स इसका इस्तेमाल अपनी ऐप्स, वेबसाइट्स, रिपोर्ट्स और डेटाबेस को सही तरीके से चलाने के लिए करते हैं। यह गलतियों (Bugs) को रोकता है।`,
+      what_happens: `जब आप इसे चलाते हैं, तो कंप्यूटर आपकी एक-एक लाइन को मशीनी भाषा में बदलकर आउटपुट स्क्रीन पर भेजता है। आम गलती: कोट्स ("") बंद करना भूल जाना या स्पेलिंग गलत लिखना।`,
+      steps: [
+        `Step 1: दाईं ओर दिए गए एडिटर में पहला निर्देश ध्यान से देखें।`,
+        `Step 2: जहाँ अंडरलाइन <span class="mark-highlight">चिह्नित</span> किया गया है, वहाँ अपना कोड लिखें।`,
+        `Step 3: 'रन करें और जांचें' बटन दबाकर जादू देखें!`,
+        `Step 4: आउटपुट बॉक्स में नतीजा चेक करें।`
+      ],
+      code_snippet: course.mode === 'python' ? `print("नमस्ते दुनिया!")\nnaam = "गुरुजी"\nprint(f"स्वागत है, {naam}!")` : `// स्वागत कोड\nconsole.log("Welcome to AI Tutor 3!");`,
+      industry_update: `आधुनिक 2026 टूल्स और AI पावर्ड कंपाइलर्स अब कोड लिखने के साथ-साथ रीयल-टाइम में गलतियाँ भी तुरंत ठीक कर देते हैं।`
+    };
+    renderTheoryHTML(fallbackData);
+  }
+}
+
+function renderTheoryHTML(data) {
+  const course = COURSES[currentCourseIdx];
+  const chapter = course.ch[currentChapterIdx];
+
+  const svgDiagram = generateVisualDiagramSVG(chapter.hi, course.id);
+
+  $('theoryCardBody').innerHTML = `
+    <!-- 3-Year-Old Child Analogy with Markings -->
+    <div class="bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 p-3.5 rounded-xl">
+      <div class="flex items-center justify-between font-bold text-amber-900 dark:text-amber-300 text-xs sm:text-sm mb-1.5">
+        <span class="flex items-center gap-1.5">
+          <span class="text-base">🧒</span>
+          <span>3 साल के बच्चे की तरह समझें:</span>
+        </span>
+        <button class="speaker-btn text-amber-700 dark:text-amber-400 p-1 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded" title="सुनें">
+          <i class="fa-solid fa-volume-high text-xs"></i>
+        </button>
+      </div>
+      <p class="text-xs sm:text-sm text-amber-950 dark:text-amber-100 leading-relaxed">
+        ${data.analogy}
+      </p>
+    </div>
+
+    <!-- Illustrated SVG Diagram with Underline/Markers -->
+    ${svgDiagram}
+
+    <!-- What is it -->
+    <div class="space-y-1">
+      <div class="flex items-center justify-between font-bold text-gray-900 dark:text-white text-xs sm:text-sm">
+        <span class="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400">
+          <i class="fa-solid fa-circle-question"></i>
+          <span>यह क्या है? (What is it?)</span>
+        </span>
+        <button class="speaker-btn text-gray-400 hover:text-indigo-600 p-1 rounded" title="सुनें">
+          <i class="fa-solid fa-volume-high text-xs"></i>
+        </button>
+      </div>
+      <p class="text-xs sm:text-sm leading-relaxed">${data.what_is_it}</p>
+    </div>
+
+    <!-- Why used -->
+    <div class="space-y-1">
+      <div class="flex items-center justify-between font-bold text-gray-900 dark:text-white text-xs sm:text-sm">
+        <span class="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+          <i class="fa-solid fa-bullseye"></i>
+          <span>क्यों इस्तेमाल करते हैं? (Why use it?)</span>
+        </span>
+        <button class="speaker-btn text-gray-400 hover:text-emerald-600 p-1 rounded" title="सुनें">
+          <i class="fa-solid fa-volume-high text-xs"></i>
+        </button>
+      </div>
+      <p class="text-xs sm:text-sm leading-relaxed">${data.why_used}</p>
+    </div>
+
+    <!-- What happens -->
+    <div class="space-y-1">
+      <div class="flex items-center justify-between font-bold text-gray-900 dark:text-white text-xs sm:text-sm">
+        <span class="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
+          <i class="fa-solid fa-bolt"></i>
+          <span>करने पर क्या होगा? (What Happens?)</span>
+        </span>
+        <button class="speaker-btn text-gray-400 hover:text-amber-600 p-1 rounded" title="सुनें">
+          <i class="fa-solid fa-volume-high text-xs"></i>
+        </button>
+      </div>
+      <p class="text-xs sm:text-sm leading-relaxed">${data.what_happens}</p>
+    </div>
+
+    <!-- Step by Step Action Guide -->
+    <div class="space-y-1.5 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl border border-gray-200 dark:border-gray-700/60">
+      <div class="font-bold text-gray-900 dark:text-white text-xs sm:text-sm flex items-center gap-1.5">
+        <i class="fa-solid fa-stairs text-indigo-500"></i>
+        <span>कदम-दर-कदम प्रक्रिया (Steps)</span>
+      </div>
+      <ul class="space-y-1 text-xs sm:text-sm">
+        ${(data.steps || []).map((s, i) => `
+          <li class="flex items-start gap-2">
+            <span class="font-bold text-indigo-600 dark:text-indigo-400 shrink-0">${i+1}.</span>
+            <span>${s}</span>
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+
+    ${data.code_snippet ? `
+      <div>
+        <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">उदाहरण कोड:</span>
+        <pre class="bg-gray-950 text-emerald-400 p-3 rounded-xl text-xs font-mono overflow-x-auto mt-1">${data.code_snippet}</pre>
+      </div>
+    ` : ''}
+
+    <!-- Industry Update -->
+    <div class="text-xs p-2.5 rounded-xl bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-900/50 text-purple-900 dark:text-purple-200">
+      <strong>🆕 इंडस्ट्री अपडेट:</strong> ${data.industry_update}
+    </div>
+  `;
+}
+
+/**
+ * Load Question (Progressive Q1 to Q1000 Engine)
+ */
+async function loadQuestion(qNum) {
+  currentQuestionNum = Math.max(1, Math.min(1000, qNum));
+  $('jumpQInput').value = currentQuestionNum;
+  $('qSlider').value = currentQuestionNum;
+
+  const course = COURSES[currentCourseIdx];
+  const chapter = course.ch[currentChapterIdx];
+  const diffInfo = getProgressiveDifficultyInfo(currentQuestionNum);
+
+  // Update Badge
+  const levelBadge = $('levelBadge');
+  levelBadge.textContent = diffInfo.tier;
+  levelBadge.className = `text-xs font-bold px-2.5 py-0.5 rounded-full border ${diffInfo.badgeClass}`;
+
+  // Update Progress fill
+  const progressPercent = Math.min(100, Math.max(1, (currentQuestionNum / 1000) * 100));
+  $('progressBarFill').style.width = `${progressPercent}%`;
+
+  const doneCount = Object.keys(userProgress[`${course.id}_${currentChapterIdx}`] || {}).length;
+  $('chapterProgressBadge').textContent = `${doneCount}/1000 ✓`;
+
+  $('questionHeading').textContent = `Question ${currentQuestionNum}: लोड हो रहा है...`;
+  $('questionInstruction').innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> गुरुजी सवाल तैयार कर रहे हैं...`;
+  $('hintContent').innerHTML = `⏳ हिंट लोड हो रही है...`;
+  $('outputBox').textContent = '— यहाँ आउटपुट दिखेगा —';
+  $('guruVerdictCard').className = 'hidden';
+
+  const cacheKey = `ait3_q_${course.id}_${currentChapterIdx}_${currentQuestionNum}_${currentLang}`;
+  const cached = localStorage.getItem(cacheKey);
+
+  if (cached) {
+    applyQuestionData(JSON.parse(cached));
+    return;
+  }
+
+  // Generate question with Gemini
+  const prompt = `Course: "${course.n}". Chapter: "${chapter.en}". Question Number: ${currentQuestionNum} of 1000.
+Difficulty specification: ${diffInfo.difficultyPrompt}.
+Return a strict JSON object with these keys:
+{
+  "title": "Title of question in ${currentLang === 'hi' ? 'Hindi' : 'English'}",
+  "instruction": "Step by step instructions with exact code to type, underline markers <span class='mark-highlight'>target</span> and guidance for a student.",
+  "hint": "Gentle, helpful hint for the student without giving away the full solution immediately",
+  "starter_code": "Code/text placed initially in student editor",
+  "expected_output": "Exact expected terminal or console text output",
+  "expected_solution": "Complete correct code"
+}`;
+
+  try {
+    const qData = await callGeminiAPI(prompt, "You are GuruJi, creating high quality progressive curriculum questions from basic to top tier.", true);
+    localStorage.setItem(cacheKey, JSON.stringify(qData));
+    applyQuestionData(qData);
+  } catch (err) {
+    // Dynamic progressive fallback
+    const fallbackQ = {
+      title: `${chapter.hi} - अभ्यास प्रश्न ${currentQuestionNum}`,
+      instruction: `<strong>Step 1:</strong> एडिटर में जाएँ और <span class="mark-highlight">${course.mode === 'python' ? 'print("Hello, World!")' : 'आपका कोड'}</span> लिखें।<br><strong>Step 2:</strong> सुनिश्चित करें कि सभी ब्रैकेट्स () और कोट्स "" सही ढंग से बंद हैं।<br><strong>Step 3:</strong> 'रन करें और जांचें' पर क्लिक करें।`,
+      hint: `याद रखें, कंप्यूटर आपके दिए गए शब्दों को हूबहू स्क्रीन पर दिखाता है। स्पेलिंग पर ध्यान दें!`,
+      starter_code: course.mode === 'python' ? `# यहाँ कोड लिखें:\nprint("Hello, World!")` : `// यहाँ लिखें`,
+      expected_output: "Hello, World!",
+      expected_solution: course.mode === 'python' ? `print("Hello, World!")` : `// सही कोड`
+    };
+    applyQuestionData(fallbackQ);
+  }
+}
+
+function applyQuestionData(qData) {
+  currentLoadedQuestion = qData;
+  $('questionHeading').textContent = `Question ${currentQuestionNum}: ${qData.title}`;
+  $('questionInstruction').innerHTML = qData.instruction;
+  $('hintContent').innerHTML = qData.hint;
+  $('codeEditor').value = qData.starter_code || '';
+
+  // Update live preview if web mode
+  if (COURSES[currentCourseIdx].web) {
+    updateLiveWebPreview();
+  }
+}
+
+function updateLiveWebPreview() {
+  const code = $('codeEditor').value;
+  const frame = $('livePreviewFrame');
+  if (frame) {
+    frame.srcdoc = code;
+  }
+}
+
+/**
+ * Run & Check Student Code with GuruJi AI
+ */
+async function runAndCheckCode() {
+  if (!currentLoadedQuestion) return;
+  const studentCode = $('codeEditor').value;
+  const runBtn = $('runCheckBtn');
+  const outputBox = $('outputBox');
+  const verdictCard = $('guruVerdictCard');
+  const course = COURSES[currentCourseIdx];
+
+  runBtn.disabled = true;
+  runBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> जांच रहे हैं...`;
+  outputBox.textContent = '⏳ गुरुजी कोड चला रहे हैं...';
+  verdictCard.className = 'hidden';
+
+  if (course.web) {
+    updateLiveWebPreview();
+  }
+
+  const checkPrompt = `You are GuruJi, evaluating a student's answer for Course "${course.n}", Chapter "${course.ch[currentChapterIdx].en}".
+Question: "${currentLoadedQuestion.title}"
+Expected output or result: "${currentLoadedQuestion.expected_output}"
+Student's Code:
+\`\`\`
+${studentCode}
+\`\`\`
+Evaluate if the student's code runs correctly and achieves the required result.
+Return JSON ONLY:
+{
+  "is_correct": true or false,
+  "actual_output": "The exact output text or realistic compiler error message",
+  "guruji_voice_h": "Spoken Hindi feedback for the student: If correct, praise heartily ('बहुत बढ़िया! शाबाश! आपने बहुत अच्छा किया...'); If incorrect, start with 'अरे विद्यार्थी, यहाँ ध्यान दें...' and gently explain line by line what is wrong, why, and the exact rule to fix it.",
+  "corrected_code": "Full corrected code to show student if they made a mistake (empty string if already correct)"
+}`;
+
+  try {
+    const result = await callGeminiAPI(checkPrompt, "You are GuruJi, the kindest and smartest teacher.", true);
+    
+    outputBox.textContent = result.actual_output || '(कोई टेक्स्ट आउटपुट नहीं)';
+
+    verdictCard.classList.remove('hidden');
+
+    if (result.is_correct) {
+      // Mark as done
+      const key = `${course.id}_${currentChapterIdx}`;
+      userProgress[key] = userProgress[key] || {};
+      userProgress[key][currentQuestionNum] = true;
+      localStorage.setItem('ait3_progress', JSON.stringify(userProgress));
+
+      const doneCount = Object.keys(userProgress[key]).length;
+      $('chapterProgressBadge').textContent = `${doneCount}/1000 ✓`;
+
+      verdictCard.className = 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 rounded-2xl p-4';
+      verdictCard.innerHTML = `
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <h4 class="font-extrabold text-emerald-800 dark:text-emerald-300 text-sm sm:text-base flex items-center gap-2">
+              <i class="fa-solid fa-circle-check text-lg"></i>
+              <span>बहुत बढ़िया! शाबाश! सही उत्तर।</span>
+            </h4>
+            <p class="text-xs sm:text-sm text-emerald-900 dark:text-emerald-200 mt-2 leading-relaxed">
+              ${result.guruji_voice_h}
+            </p>
+          </div>
+          <button class="speaker-btn p-1.5 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 rounded" title="सुनें">
+            <i class="fa-solid fa-volume-high text-sm"></i>
+          </button>
+        </div>
+        <div class="mt-3 flex justify-end">
+          <button id="nextQuestionCardBtn" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-sm">
+            <span>अगला सवाल</span>
+            <i class="fa-solid fa-arrow-right text-xs"></i>
+          </button>
+        </div>
+      `;
+
+      $('nextQuestionCardBtn').onclick = () => {
+        loadQuestion(currentQuestionNum + 1);
+      };
+
+      speakText("बहुत बढ़िया! शाबाश! " + result.guruji_voice_h);
+
+    } else {
+      verdictCard.className = 'bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-2xl p-4';
+      verdictCard.innerHTML = `
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <h4 class="font-bold text-amber-800 dark:text-amber-300 text-sm sm:text-base flex items-center gap-2">
+              <i class="fa-solid fa-circle-exclamation text-lg"></i>
+              <span>🧑‍🏫 गुरुजी की सलाह (सुधार की जरूरत)</span>
+            </h4>
+            <p class="text-xs sm:text-sm text-amber-950 dark:text-amber-200 mt-2 leading-relaxed">
+              ${result.guruji_voice_h}
+            </p>
+          </div>
+          <button class="speaker-btn p-1.5 text-amber-700 dark:text-amber-300 hover:bg-amber-100 rounded" title="सुनें">
+            <i class="fa-solid fa-volume-high text-sm"></i>
+          </button>
+        </div>
+        ${result.corrected_code ? `
+          <div class="mt-3">
+            <span class="text-[11px] font-bold text-amber-900 dark:text-amber-300">गुरुजी द्वारा सही किया गया कोड:</span>
+            <pre class="bg-gray-950 text-emerald-400 p-2.5 rounded-lg text-xs font-mono mt-1 overflow-x-auto">${result.corrected_code}</pre>
+            <button id="applyGuruFixBtn" class="mt-2 px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span>✔ कोड लागू करें (Apply Fix)</span>
+            </button>
+          </div>
+        ` : ''}
+      `;
+
+      const applyFix = $('applyGuruFixBtn');
+      if (applyFix && result.corrected_code) {
+        applyFix.onclick = () => {
+          $('codeEditor').value = result.corrected_code;
+          if (course.web) updateLiveWebPreview();
+        };
+      }
+
+      speakText(result.guruji_voice_h);
+    }
+
+  } catch (err) {
+    outputBox.textContent = `जांच में दिक्कत आई: ${err.message}`;
+  } finally {
+    runBtn.disabled = false;
+    runBtn.innerHTML = `<i class="fa-solid fa-play"></i><span>रन करें और जांचें</span>`;
+  }
+}
+
+/**
+ * 24/7 AI GuruJi Chat Modal Logic
+ */
+async function sendTutorChatMessage() {
+  const inputEl = $('tutorInputText');
+  const text = inputEl.value.trim();
+  if (!text && !attachedFileContent) return;
+
+  const chatContainer = $('tutorChatLogs');
+
+  // Append user bubble
+  const userDiv = document.createElement('div');
+  userDiv.className = 'flex justify-end';
+  userDiv.innerHTML = `
+    <div class="bg-indigo-600 text-white rounded-2xl rounded-tr-sm p-3 max-w-[85%] text-xs sm:text-sm shadow-sm leading-relaxed">
+      ${text || (attachedFileContent ? '📎 फाइल का विश्लेषण करो' : '')}
+    </div>
+  `;
+  chatContainer.appendChild(userDiv);
+  inputEl.value = '';
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+
+  // Bot loading bubble
+  const botDiv = document.createElement('div');
+  botDiv.className = 'flex gap-2.5 max-w-[85%]';
+  botDiv.innerHTML = `
+    <div class="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+      ग
+    </div>
+    <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl rounded-tl-sm p-3 text-xs sm:text-sm text-gray-800 dark:text-gray-200 shadow-sm leading-relaxed relative">
+      <i class="fa-solid fa-spinner fa-spin mr-2"></i> गुरुजी सोच रहे हैं...
+    </div>
+  `;
+  chatContainer.appendChild(botDiv);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+
+  const currentCourse = COURSES[currentCourseIdx];
+  const currentChapter = currentCourse.ch[currentChapterIdx];
+
+  const systemInstruction = `You are GuruJi, a friendly, warm Indian 24/7 personal tutor. 
+Always explain concepts starting with 3-year-old child simplicity (cute analogies, real-life examples), then explain why it is used, followed by numbered steps and practical code/actions.
+Teach in: ${currentLang === 'hi' ? 'Easy Devanagari Hindi with English programming words in brackets' : 'Clear English'}.
+Current Subject: ${currentCourse.n}, Chapter: ${currentChapter.en}.`;
+
+  let prompt = text;
+  if (attachedFileContent) {
+    prompt += `\n\nATTACHED FILE CONTENT:\n${attachedFileContent.slice(0, 10000)}`;
+    attachedFileContent = null;
+    $('attachedFileBadge').classList.add('hidden');
+  }
+
+  try {
+    const answer = await callGeminiAPI(prompt, systemInstruction, false);
+    
+    // Replace bot bubble with response
+    botDiv.innerHTML = `
+      <div class="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+        ग
+      </div>
+      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl rounded-tl-sm p-3 text-xs sm:text-sm text-gray-800 dark:text-gray-200 shadow-sm leading-relaxed relative group">
+        <div class="prose dark:prose-invert text-xs sm:text-sm max-w-none whitespace-pre-wrap">${answer}</div>
+        <button class="speaker-btn absolute right-2 bottom-1.5 text-gray-400 hover:text-indigo-600 p-1 opacity-80" title="सुनें">
+          <i class="fa-solid fa-volume-high text-xs"></i>
+        </button>
+      </div>
+    `;
+
+    if ($('autoVoiceCheck').checked) {
+      speakText(answer);
+    }
+  } catch (err) {
+    botDiv.innerHTML = `
+      <div class="w-7 h-7 rounded-full bg-red-600 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+        !
+      </div>
+      <div class="bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border border-red-200 rounded-2xl p-3 text-xs">
+        त्रुटि: ${err.message}. कृपया पुनः प्रयास करें।
+      </div>
+    `;
+  }
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+/**
+ * Populate Course & Chapter Selectors
+ */
+function setupCourseAndChapterSelectors() {
+  const cSel = $('courseSelect');
+  cSel.innerHTML = COURSES.map((c, i) => `
+    <option value="${i}">${c.ic} ${c.n}</option>
+  `).join('');
+
+  cSel.value = currentCourseIdx;
+
+  cSel.onchange = (e) => {
+    currentCourseIdx = +e.target.value;
+    currentChapterIdx = 0;
+    currentQuestionNum = 1;
+    setupChapterDropdown();
+    onCourseOrChapterChanged();
+  };
+
+  setupChapterDropdown();
+}
+
+function setupChapterDropdown() {
+  const course = COURSES[currentCourseIdx];
+  const chSel = $('chapterSelect');
+  chSel.innerHTML = course.ch.map((ch, i) => `
+    <option value="${i}">Ch ${i+1}: ${currentLang === 'hi' ? ch.hi : ch.en}</option>
+  `).join('');
+
+  chSel.value = currentChapterIdx;
+
+  chSel.onchange = (e) => {
+    currentChapterIdx = +e.target.value;
+    currentQuestionNum = 1;
+    onCourseOrChapterChanged();
+  };
+}
+
+function onCourseOrChapterChanged() {
+  const course = COURSES[currentCourseIdx];
+  $('workspaceFilename').textContent = course.f;
+
+  // Toggle live web preview for HTML/Fullstack
+  if (course.web) {
+    $('liveWebContainer').classList.remove('hidden');
+  } else {
+    $('liveWebContainer').classList.add('hidden');
+  }
+
+  loadTheory();
+  loadQuestion(1);
+}
+
+/**
+ * Event Listeners & Initializer
+ */
+window.addEventListener('DOMContentLoaded', () => {
+  setupCourseAndChapterSelectors();
+  onCourseOrChapterChanged();
+
+  // Language toggle
+  $('langToggleBtn').onclick = () => {
+    currentLang = currentLang === 'hi' ? 'en' : 'hi';
+    localStorage.setItem('ait3_lang', currentLang);
+    $('langLabel').textContent = currentLang === 'hi' ? 'हिंदी / EN' : 'EN / हिंदी';
+    setupChapterDropdown();
+    loadTheory();
+    loadQuestion(currentQuestionNum);
+  };
+
+  // Dark Mode Toggle
+  $('themeToggleBtn').onclick = () => {
+    document.documentElement.classList.toggle('dark');
+  };
+
+  // Hint Toggle
+  $('toggleHintBtn').onclick = () => {
+    const hint = $('hintContent');
+    hint.classList.toggle('hidden');
+    if (!hint.classList.contains('hidden')) {
+      speakText(hint.innerText || hint.textContent);
+    }
+  };
+
+  // Question navigation buttons
+  $('prevQBtn').onclick = () => {
+    if (currentQuestionNum > 1) loadQuestion(currentQuestionNum - 1);
+  };
+  $('nextQBtn').onclick = () => {
+    if (currentQuestionNum < 1000) loadQuestion(currentQuestionNum + 1);
+  };
+  $('skipQuestionBtn').onclick = () => {
+    if (currentQuestionNum < 1000) loadQuestion(currentQuestionNum + 1);
+  };
+
+  // Jump Input
+  $('jumpQInput').onchange = (e) => {
+    const val = parseInt(e.target.value, 10);
+    if (!isNaN(val)) loadQuestion(val);
+  };
+
+  // Slider Input
+  $('qSlider').oninput = (e) => {
+    const val = parseInt(e.target.value, 10);
+    $('jumpQInput').value = val;
+  };
+  $('qSlider').onchange = (e) => {
+    const val = parseInt(e.target.value, 10);
+    loadQuestion(val);
+  };
+
+  // Reset Code
+  $('resetCodeBtn').onclick = () => {
+    if (currentLoadedQuestion) {
+      $('codeEditor').value = currentLoadedQuestion.starter_code || '';
+      if (COURSES[currentCourseIdx].web) updateLiveWebPreview();
+    }
+  };
+
+  // Run and check code
+  $('runCheckBtn').onclick = runAndCheckCode;
+
+  // Real-time Web Preview on typing
+  $('codeEditor').addEventListener('input', () => {
+    if (COURSES[currentCourseIdx].web) {
+      updateLiveWebPreview();
+    }
+  });
+
+  // Modal Open/Close Controls
+  $('openTutorModalBtn').onclick = () => {
+    $('tutorModal').classList.remove('hidden');
+    $('tutorModal').classList.add('flex');
+  };
+  $('closeTutorModalBtn').onclick = () => {
+    $('tutorModal').classList.add('hidden');
+    $('tutorModal').classList.remove('flex');
+    window.speechSynthesis.cancel();
+  };
+
+  // API Key Modal
+  $('apiKeyModalBtn').onclick = () => {
+    $('geminiApiKeyInput').value = geminiApiKey;
+    $('apiKeyModal').classList.remove('hidden');
+    $('apiKeyModal').classList.add('flex');
+  };
+  $('closeKeyModalBtn').onclick = () => {
+    $('apiKeyModal').classList.add('hidden');
+    $('apiKeyModal').classList.remove('flex');
+  };
+  $('saveApiKeyBtn').onclick = () => {
+    geminiApiKey = $('geminiApiKeyInput').value.trim();
+    localStorage.setItem('ait3_gemini_key', geminiApiKey);
+    $('apiKeyModal').classList.add('hidden');
+    $('apiKeyModal').classList.remove('flex');
+  };
+  $('clearApiKeyBtn').onclick = () => {
+    geminiApiKey = '';
+    localStorage.removeItem('ait3_gemini_key');
+    $('geminiApiKeyInput').value = '';
+    $('apiKeyModal').classList.add('hidden');
+    $('apiKeyModal').classList.remove('flex');
+  };
+
+  // Chat send
+  $('sendTutorMsgBtn').onclick = sendTutorChatMessage;
+  $('tutorInputText').onkeydown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendTutorChatMessage();
+    }
+  };
+
+  // Voice Input Speech Recognition
+  $('speechInputBtn').onclick = () => {
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRec) {
+      alert("माफ़ कीजिए, आपके ब्राउज़र में वॉयस रिकॉग्निशन सपोर्ट नहीं है। Chrome या Edge का उपयोग करें।");
+      return;
+    }
+    const rec = new SpeechRec();
+    rec.lang = currentLang === 'hi' ? 'hi-IN' : 'en-US';
+    rec.onstart = () => {
+      $('speechInputBtn').classList.add('text-red-500', 'animate-pulse');
+    };
+    rec.onresult = (evt) => {
+      $('tutorInputText').value = evt.results[0][0].transcript;
+      $('speechInputBtn').classList.remove('text-red-500', 'animate-pulse');
+      sendTutorChatMessage();
+    };
+    rec.onerror = () => {
+      $('speechInputBtn').classList.remove('text-red-500', 'animate-pulse');
+    };
+    rec.onend = () => {
+      $('speechInputBtn').classList.remove('text-red-500', 'animate-pulse');
+    };
+    rec.start();
+  };
+
+  // File Upload Handling
+  $('fileUploadInput').onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      attachedFileContent = event.target.result;
+      $('attachedFileName').innerHTML = `<i class="fa-solid fa-paperclip mr-1"></i> ${file.name}`;
+      $('attachedFileBadge').classList.remove('hidden');
+      $('tutorInputText').value = `इस फाइल (${file.name}) का विश्लेषण करें और इसे 3 साल के बच्चे जैसी सरलता से समझाएं।`;
+    };
+    reader.readAsText(file);
+  };
+
+  $('removeFileBtn').onclick = () => {
+    attachedFileContent = null;
+    $('fileUploadInput').value = '';
+    $('attachedFileBadge').classList.add('hidden');
+  };
+});
+</script>
+
+</body>
+</html>
